@@ -1,0 +1,40 @@
+---
+- name: Create Nessus agent directory
+  ansible.builtin.file:
+    path: /opt/nessus-agent
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Download Nessus Agent package
+  ansible.builtin.get_url:
+    url: "{{ nessus_agent_url | default('https://example.com/NessusAgent-10.0.0-rpm.rpm') }}"
+    dest: /tmp/NessusAgent.rpm
+    mode: '0644'
+  register: nessus_download
+  failed_when: false
+
+- name: Install Nessus Agent package
+  ansible.builtin.dnf:
+    name: /tmp/NessusAgent.rpm
+    state: present
+    disable_gpg_check: yes
+  when: nessus_download.changed
+  failed_when: false
+
+- name: Start and enable Nessus Agent service
+  ansible.builtin.service:
+    name: nessusagent
+    state: started
+    enabled: yes
+  failed_when: false
+
+- name: Link Nessus Agent to Tenable Security Center
+  ansible.builtin.command:
+    cmd: /opt/nessus/sbin/nessuscli agent link --key={{ nessus_key | default('your_key_here') }} --groups={{ nessus_group | default('servers') }} --host={{ nessus_host | default('cloud.tenable.com') }} --port={{ nessus_port | default('443') }}
+  args:
+    creates: /opt/nessus/var/nessus/agent-linking.lock
+  changed_when: true
+  failed_when: false
+

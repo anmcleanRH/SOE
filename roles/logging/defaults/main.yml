@@ -1,0 +1,45 @@
+---
+# This file contains default variables for the logging role.
+# These variables can be overridden in the playbook or inventory files.
+
+# Rsyslog configuration
+rsyslog_server: "syslog.prod.example.com"
+rsyslog_server_ip: "192.168.0.1"
+
+# Auditd configuration
+auditd_log_file: "/var/log/audit/audit.log"
+auditd_num_logs: 5
+auditd_max_log_file: 8
+auditd_max_log_file_action: "rotate"
+auditd_space_left: 75
+auditd_space_left_action: "email"
+auditd_admin_space_left: 50
+auditd_admin_space_left_action: "email"
+auditd_admin_email: "root"
+auditd_active: "yes"
+
+# Log retention period (in weeks)
+log_retention_weeks: 4
+
+# Log file permissions
+log_files_permissions:
+  - path: "/var/log/messages"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  - path: "/var/log/secure"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  - path: "/var/log/maillog"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  - path: "/var/log/cron"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  - path: "/var/log/audit/audit.log"
+    owner: "root"
+    group: "root"
+    mode: "0600"

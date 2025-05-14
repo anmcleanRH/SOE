@@ -1,0 +1,70 @@
+---
+# tasks/auditd.yml - Tasks for configuring auditd
+
+- name: Ensure required directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0750'
+  loop: "{{ required_directories }}"
+  tags:
+    - directories
+    - auditd
+
+- name: Install audit packages
+  ansible.builtin.package:
+    name: "{{ auditd_packages[ansible_os_family] }}"
+    state: present
+
+- name: Configure auditd.conf
+  ansible.builtin.template:
+    src: auditd.conf.j2
+    dest: /etc/audit/auditd.conf
+    owner: root
+    group: root
+    mode: '0640'
+  notify: Restart auditd
+
+- name: Configure audit to syslog forwarding
+  ansible.builtin.template:
+    src: audisp-syslog.conf.j2
+    dest: /etc/audisp/plugins.d/syslog.conf
+    owner: root
+    group: root
+    mode: '0640'
+  notify: Restart auditd
+
+- name: Deploy audit rules
+  ansible.builtin.copy:
+    src: audit.rules
+    dest: "{{ config_paths.auditd_rules[ansible_os_family] }}"
+    owner: root
+    group: root
+    mode: '0640'
+  notify: Load audit rules
+
+- name: Check if audit=1 is already in kernel parameters
+  ansible.builtin.command: grep -E 'audit=1' {{ config_paths.grub[ansible_os_family] }}
+  register: audit_param_check
+  changed_when: false
+  failed_when: false
+  check_mode: no
+
+- name: Enable audit in kernel parameters
+  ansible.builtin.lineinfile:
+    path: "{{ config_paths.grub[ansible_os_family] }}"
+    regexp: '^GRUB_CMDLINE_LINUX="([^"]*)"$'
+    line: 'GRUB_CMDLINE_LINUX="\1 audit=1"'
+    backrefs: yes
+  notify: Update grub
+  when: 
+    - ansible_service_mgr == "systemd"
+    - audit_param_check.rc != 0
+
+- name: Enable and start auditd service
+  ansible.builtin.service:
+    name: "{{ service_names.auditd[ansible_os_family] }}"
+    state: started
+    enabled: yes

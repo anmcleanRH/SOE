@@ -1,0 +1,27 @@
+---
+- name: Add LibreNMS repository
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/librenms/librenms-agent/master/agent-yum/librenms.repo
+    dest: /etc/yum.repos.d/librenms.repo
+    mode: '0644'
+
+- name: Install LibreNMS agent
+  ansible.builtin.dnf:
+    name: librenms-agent
+    state: present
+
+- name: Configure LibreNMS agent
+  ansible.builtin.template:
+    src: librenms.conf.j2
+    dest: /etc/snmp/librenms.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart snmpd
+
+- name: Enable and start SNMPD service
+  ansible.builtin.service:
+    name: snmpd
+    state: started
+    enabled: yes
+

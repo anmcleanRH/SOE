@@ -1,0 +1,62 @@
+---
+# vars/main.yml - Variables for logging role that shouldn't be overridden
+
+# Package names by OS family
+auditd_packages:
+  RedHat:
+    - audit
+    - audit-libs
+    - audispd-plugins
+  Debian:
+    - auditd
+    - audispd-plugins
+
+rsyslog_packages:
+  RedHat:
+    - rsyslog
+  Debian:
+    - rsyslog
+
+# Service names by OS family (usually the same but good to define for consistency)
+service_names:
+  auditd:
+    RedHat: auditd
+    Debian: auditd
+  rsyslog:
+    RedHat: rsyslog
+    Debian: rsyslog
+
+# Path differences by OS family
+config_paths:
+  auditd_rules:
+    RedHat: /etc/audit/rules.d/audit.rules
+    Debian: /etc/audit/rules.d/audit.rules
+  grub:
+    RedHat: /etc/default/grub
+    Debian: /etc/default/grub
+  
+# Commands for updating grub (varies by OS and version)
+grub_update_cmd:
+  RedHat:
+    '7': 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+    '8': 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+    '9': 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+  Debian:
+    'buster': 'update-grub'
+    'bullseye': 'update-grub'
+  Ubuntu:
+    'focal': 'update-grub'
+    'jammy': 'update-grub'
+
+# Required directories
+required_directories:
+  - /etc/audit/rules.d
+  - /etc/rsyslog.d
+  - /var/log/audit
+
+# Facility and priority mappings for logs
+syslog_facilities:
+  messages: "*.info;mail.none;authpriv.none;cron.none"
+  secure: "authpriv.*"
+  maillog: "mail.*"
+  cron: "cron.*"

@@ -1,0 +1,49 @@
+# RSyslog configuration file
+# {{ ansible_managed }}
+
+#### MODULES ####
+module(load="imuxsock")    # provides support for local system logging
+module(load="imjournal")   # provides access to the systemd journal
+module(load="imklog")      # reads kernel messages
+
+# Set the default permissions for all log files
+$FileOwner root
+$FileGroup root
+$FileCreateMode 0600
+$DirCreateMode 0755
+$Umask 0022
+$PrivDropToUser root
+$PrivDropToGroup root
+
+# Where to place auxiliary files
+$WorkDirectory /var/lib/rsyslog
+
+# Include all config files in /etc/rsyslog.d/
+$IncludeConfig /etc/rsyslog.d/*.conf
+
+#### RULES ####
+
+# Log all kernel messages to the console
+# kern.*                                                 /dev/console
+
+# Log anything (except mail) of level info or higher
+# Don't log private authentication messages or cron messages
+{{ syslog_facilities.messages }}                         /var/log/messages
+
+# The authpriv file has restricted access
+{{ syslog_facilities.secure }}                           /var/log/secure
+
+# Log all the mail messages in one place
+{{ syslog_facilities.maillog }}                          /var/log/maillog
+
+# Log cron stuff
+{{ syslog_facilities.cron }}                             /var/log/cron
+
+# Everybody gets emergency messages
+*.emerg                                                 :omusrmsg:*
+
+# Save news errors of level crit and higher
+uucp,news.crit                                          /var/log/spooler
+
+# Save boot messages also to boot.log
+local7.*                                                /var/log/boot.log

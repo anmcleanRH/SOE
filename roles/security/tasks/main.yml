@@ -1,0 +1,91 @@
+---
+- name: Set stronger password policies
+  ansible.builtin.lineinfile:
+    path: /etc/security/pwquality.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  loop:
+    - { regexp: '^# minlen =', line: 'minlen = 15' }
+    - { regexp: '^# minclass =', line: 'minclass = 4' }
+    - { regexp: '^# dcredit =', line: 'dcredit = -1' }
+    - { regexp: '^# ucredit =', line: 'ucredit = -1' }
+    - { regexp: '^# lcredit =', line: 'lcredit = -1' }
+    - { regexp: '^# ocredit =', line: 'ocredit = -1' }
+    - { regexp: '^# difok =', line: 'difok = 8' }
+    - { regexp: '^# maxrepeat =', line: 'maxrepeat = 3' }
+    - { regexp: '^# gecoscheck =', line: 'gecoscheck = 1' }
+
+- name: Configure system-wide security settings
+  ansible.builtin.lineinfile:
+    path: /etc/security/limits.conf
+    line: "{{ item }}"
+    state: present
+  loop:
+    - "* hard core 0"
+    - "* soft nproc 1024"
+    - "* hard nproc 4096"
+
+- name: Configure secure login timeout
+  ansible.builtin.lineinfile:
+    path: /etc/profile
+    line: "readonly TMOUT=600 ; export TMOUT"
+    state: present
+
+- name: Configure sudo settings for tty requirement
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/99-requiretty
+    line: "Defaults requiretty"
+    state: present
+    mode: '0440'
+    create: yes
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Configure sudo settings for pty requirement
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/99-require-pty
+    line: "Defaults use_pty"
+    state: present
+    mode: '0440'
+    create: yes
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Install OpenSCAP and security tools
+  ansible.builtin.dnf:
+    name:
+      - scap-security-guide
+      - openscap
+      - openscap-scanner
+      - aide
+    state: present
+
+- name: Set up OpenSCAP scan directory
+  ansible.builtin.file:
+    path: /var/lib/openscap/
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Copy OpenSCAP scan script
+  ansible.builtin.template:
+    src: run_openscap.sh.j2
+    dest: /usr/local/bin/run_openscap.sh
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Set up AIDE
+  ansible.builtin.shell: |
+    aide --init
+    mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+  args:
+    creates: /var/lib/aide/aide.db.gz
+  changed_when: false
+
+- name: Create AIDE cron job
+  ansible.builtin.cron:
+    name: AIDE check
+    hour: "3"
+    minute: "0"
+    job: "/usr/sbin/aide --check | /usr/bin/mail -s 'AIDE check report - $(hostname)' root"

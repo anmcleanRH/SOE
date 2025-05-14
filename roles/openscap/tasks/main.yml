@@ -1,0 +1,3 @@
+- name: Placeholder task for openscap role
+  debug:
+    msg: "openscap role active"

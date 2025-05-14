@@ -1,0 +1,39 @@
+---
+# tasks/rsyslog.yml - Tasks for configuring rsyslog
+
+- name: Install rsyslog package
+  ansible.builtin.package:
+    name: "{{ rsyslog_packages[ansible_os_family] }}"
+    state: present
+
+- name: Configure rsyslog
+  ansible.builtin.template:
+    src: rsyslog.conf.j2
+    dest: /etc/rsyslog.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart rsyslog
+
+- name: Create rsyslog.d directory if it doesn't exist
+  ansible.builtin.file:
+    path: /etc/rsyslog.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure rsyslog to forward logs to central server
+  ansible.builtin.template:
+    src: rsyslog-forward.conf.j2
+    dest: /etc/rsyslog.d/forward.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart rsyslog
+
+- name: Enable and start rsyslog service
+  ansible.builtin.service:
+    name: "{{ service_names.rsyslog[ansible_os_family] }}"
+    state: started
+    enabled: yes

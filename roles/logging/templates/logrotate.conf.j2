@@ -1,0 +1,58 @@
+# Logrotate configuration for SOE logs
+# {{ ansible_managed }}
+
+/var/log/messages {
+    weekly
+    rotate {{ log_retention_weeks * 1 }}
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+    endscript
+    create 0600 root root
+}
+
+/var/log/secure {
+    weekly
+    rotate {{ log_retention_weeks * 1 }}
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+    endscript
+    create 0600 root root
+}
+
+/var/log/maillog {
+    weekly
+    rotate {{ log_retention_weeks * 1 }}
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+    endscript
+    create 0600 root root
+}
+
+/var/log/cron {
+    weekly
+    rotate {{ log_retention_weeks * 1 }}
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+    endscript
+    create 0600 root root
+}

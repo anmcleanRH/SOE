@@ -1,0 +1,16 @@
+- name: RHEL9 SOE Configuration
+  hosts: servers
+  become: true
+  roles:
+    - common
+    - ad_join
+    - chrony
+    - yubikey
+    - librenms
+    - nessus
+    - azure_backup
+    - veeam
+    - security
+    - fapolicyd
+    - openscap
+    - logging

@@ -1,0 +1,36 @@
+---
+- name: Install fapolicyd
+  ansible.builtin.dnf:
+    name: fapolicyd
+    state: present
+
+- name: Create custom rules directory
+  ansible.builtin.file:
+    path: /etc/fapolicyd/rules.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0750'
+
+- name: Add custom rules
+  ansible.builtin.template:
+    src: custom.rules.j2
+    dest: /etc/fapolicyd/rules.d/custom.rules
+    owner: root
+    group: root
+    mode: '0640'
+  notify: restart fapolicyd
+
+- name: Create app binaries directory
+  ansible.builtin.file:
+    path: /dvt/bin
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Enable and start fapolicyd
+  ansible.builtin.service:
+    name: fapolicyd
+    state: started
+    enabled: yes

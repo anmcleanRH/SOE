@@ -1,0 +1,10 @@
+# audisp syslog plugin configuration
+# {{ ansible_managed }}
+
+active = {{ auditd_active }}
+direction = out
+path = builtin_syslog
+type = builtin
+args = LOG_INFO
+format = string
+

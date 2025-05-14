@@ -1,0 +1,49 @@
+---
+- name: Install common packages
+  ansible.builtin.dnf:
+    name:
+      - vim-enhanced
+      - wget
+      - curl
+      - rsync
+      - tar
+      - zip
+      - unzip
+      - tcpdump
+      - lsof
+      - htop
+    state: present
+
+- name: Create app directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /dvt/bin
+    - /data
+    - /backup
+    - /var/lib/ansible
+
+- name: Configure chrony NTP service
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart chronyd
+
+# change to throughput-performance
+- name: Set tuned profile
+  ansible.builtin.command:
+    cmd: tuned-adm profile throughput-performance
+  changed_when: false
+
+- name: Enable and start tuned
+  ansible.builtin.systemd:
+    name: tuned
+    enabled: true
+    state: started

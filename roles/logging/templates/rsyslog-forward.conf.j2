@@ -1,0 +1,17 @@
+# Forward logs to central syslog server
+# {{ ansible_managed }}
+
+# Load required modules for TCP/UDP forwarding
+module(load="imtcp")
+module(load="imudp")
+
+# Forward all logs to central syslog server
+*.* action(
+    type="omfwd"
+    target="{{ rsyslog_server_ip }}"
+    port="514"
+    protocol="tcp"
+    action.resumeRetryCount="100"
+    queue.type="linkedList"
+    queue.size="10000"
+)

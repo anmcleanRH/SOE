@@ -1,0 +1,38 @@
+---
+# tasks/main.yml - Main tasks file for logging role
+
+- name: Include auditd tasks
+  ansible.builtin.import_tasks: auditd.yml
+  tags:
+    - auditd
+    - logging
+
+- name: Include rsyslog tasks
+  ansible.builtin.import_tasks: rsyslog.yml
+  tags:
+    - rsyslog
+    - logging
+
+- name: Configure log rotation
+  ansible.builtin.template:
+    src: logrotate.conf.j2
+    dest: /etc/logrotate.d/soe-logs
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - logrotate
+    - logging
+
+- name: Set correct permissions on log files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+    state: file
+  loop: "{{ log_files_permissions }}"
+  ignore_errors: true  # Some files might not exist yet
+  tags:
+    - permissions
+    - logging

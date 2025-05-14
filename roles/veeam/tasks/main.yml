@@ -1,0 +1,37 @@
+---
+- name: Create Veeam agent directories
+  ansible.builtin.file:
+    path: /opt/veeam
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Download Veeam repository file
+  ansible.builtin.get_url:
+    url: https://repository.veeam.com/backup/linux/agent/rpm/el/9/veeam-release.rpm
+    dest: /tmp/veeam-release.rpm
+    mode: '0644'
+  register: veeam_repo_download
+  failed_when: false
+
+- name: Install Veeam repository
+  ansible.builtin.command:
+    cmd: dnf install -y /tmp/veeam-release.rpm
+  args:
+    creates: /etc/yum.repos.d/veeam.repo
+  when: veeam_repo_download.changed
+  changed_when: true
+
+- name: Install Veeam agent
+  ansible.builtin.dnf:
+    name: veeam
+    state: present
+  failed_when: false  # This will be replaced with actual package name
+
+- name: Configure Veeam service
+  ansible.builtin.service:
+    name: veeamservice
+    state: started
+    enabled: yes
+  failed_when: false  # This will be replaced with actual service name

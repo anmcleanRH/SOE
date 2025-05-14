@@ -1,0 +1,41 @@
+---
+- name: Create Azure Backup agent directory
+  ansible.builtin.file:
+    path: /opt/azure-backup
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install required dependencies for Azure Backup
+  ansible.builtin.dnf:
+    name:
+      - python3
+      - python3-pip
+      - openssl
+    state: present
+
+- name: Download Azure Backup bundle
+  ansible.builtin.get_url:
+    url: "{{ azure_bundle_url | default('https://example.com/azure-backup-bundle.tar.gz') }}"
+    dest: /tmp/azure-backup-bundle.tar.gz
+    mode: '0644'
+  register: azure_backup_download
+  failed_when: false
+
+- name: Extract Azure Backup bundle
+  ansible.builtin.unarchive:
+    src: /tmp/azure-backup-bundle.tar.gz
+    dest: /opt/azure-backup
+    remote_src: yes
+  when: azure_backup_download.changed
+  failed_when: false
+
+- name: Run Azure Backup install script
+  ansible.builtin.command:
+    cmd: /opt/azure-backup/install.sh
+    chdir: /opt/azure-backup
+  args:
+    creates: /opt/azure-backup/bin/mabs
+  changed_when: true
+  failed_when: false

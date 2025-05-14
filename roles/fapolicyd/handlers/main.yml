@@ -1,0 +1,7 @@
+---
+- name: restart fapolicyd
+  ansible.builtin.service:
+    name: fapolicyd
+    state: restarted
+  when: ansible_distribution_major_version == "9"
+  tags: fapolicyd

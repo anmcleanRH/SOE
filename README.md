@@ -15,6 +15,7 @@ This repository contains modular Ansible roles to configure a Red Hat Enterprise
   - Veeam Agent
 - OpenSCAP security hardening (ISM profile)
 - Encrypted variable support using Ansible Vault
+- Logging
 
 ## Usage
 

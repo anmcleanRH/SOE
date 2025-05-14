@@ -1,0 +1,34 @@
+---
+- name: Install YubiKey packages
+  ansible.builtin.dnf:
+    name:
+      - fido2-tools
+      - yubikey-manager
+      - libpam-yubico
+      - libpam-u2f
+      - pam_u2f
+    state: present
+
+- name: Create u2f mappings directory
+  ansible.builtin.file:
+    path: /etc/u2f_mappings
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create u2f mappings file
+  ansible.builtin.file:
+    path: /etc/u2f_mappings/mappings
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+    modification_time: preserve
+    access_time: preserve
+
+- name: Configure PAM for YubiKey FIDO2 authentication
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/system-auth
+    line: "auth sufficient pam_u2f.so origin=pam://{{ ansible_hostname }} appid=pam://{{ ansible_hostname }} authfile=/etc/u2f_mappings/mappings"
+    state: present

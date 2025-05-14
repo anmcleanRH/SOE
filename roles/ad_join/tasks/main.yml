@@ -1,0 +1,23 @@
+- name: Install AD join dependencies
+  ansible.builtin.dnf:
+    name:
+      - realmd
+      - sssd
+      - oddjob
+      - oddjob-mkhomedir
+      - adcli
+      - samba-common
+      - krb5-workstation
+    state: present
+
+- name: Join the system to AD domain
+  ansible.builtin.shell: |
+    echo '{{ ad_admin_password }}' | realm join --user={{ ad_admin_user }} {{ ad_domain }}
+  args:
+    creates: /etc/sssd/sssd.conf
+
+- name: Enable and start SSSD
+  ansible.builtin.systemd:
+    name: sssd
+    enabled: true
+    state: started
