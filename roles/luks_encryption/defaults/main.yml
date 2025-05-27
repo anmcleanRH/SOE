@@ -1,0 +1,16 @@
+---
+# Default variables for LUKS encryption - ISM compliant for Official level
+luks_min_key_size: 256
+luks_required_cipher: "aes-xts-plain64"
+luks_required_hash: "sha512"
+luks_required_iter_time: 2000 # Minimum iteration time in milliseconds
+luks_encrypted_device: "/dev/sda2" # Adjust based on your actual device
+luks_compliance_report_dir: "/var/log/compliance"
+luks_header_backup_path: "/root/luks-header-backup"
+luks_oscap_profile: "xccdf_org.ssgproject.content_profile_ism_o" # ISM compliance profile
+
+luks_required_packages:
+  - cryptsetup
+  - cryptsetup-reencrypt
+  - scap-security-guide
+  - openscap-scanner

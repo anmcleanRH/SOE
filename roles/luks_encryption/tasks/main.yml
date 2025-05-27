@@ -1,0 +1,43 @@
+---
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "{{ ansible_distribution }}.yml"
+    - "{{ ansible_os_family }}.yml"
+    - "default.yml"
+  ignore_errors: true
+
+- name: Ensure required packages are installed
+  ansible.builtin.package:
+    name: "{{ luks_required_packages }}"
+    state: present
+
+- name: Create compliance report directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0750'
+    owner: root
+    group: root
+  loop:
+    - "{{ luks_compliance_report_dir }}"
+    - "{{ luks_compliance_report_dir }}/oscap"
+
+- name: Check if LUKS is active
+  ansible.builtin.command: dmsetup table --target crypt
+  register: dmsetup_output
+  changed_when: false
+  failed_when: false
+
+- name: Set LUKS status
+  ansible.builtin.set_fact:
+    luks_is_enabled: "{{ dmsetup_output.stdout | length > 0 }}"
+
+- name: Include configure tasks
+  ansible.builtin.import_tasks: configure.yml
+  when: luks_is_enabled
+
+- name: Include verify tasks
+  ansible.builtin.import_tasks: verify.yml
+  when: luks_is_enabled

@@ -1,0 +1,2 @@
+# Managed by Ansible
+{{ ansible_facts['ansible_cmdline'].rd_LUKS_name | default('luks-' + ansible_facts['ansible_cmdline'].rd_LUKS_UUID) }} UUID={{ ansible_facts['ansible_cmdline'].rd_LUKS_UUID }} none discard

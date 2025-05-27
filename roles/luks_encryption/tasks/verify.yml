@@ -1,0 +1,20 @@
+---
+- name: Get LUKS device info
+  ansible.builtin.command: cryptsetup luksDump {{ luks_encrypted_device }}
+  register: luks_info
+  changed_when: false
+
+- name: Verify LUKS version 2
+  ansible.builtin.assert:
+    that: "'Version: 2' in luks_info.stdout"
+    fail_msg: "LUKS version must be 2"
+
+- name: Run OpenSCAP ISM_O scan
+  ansible.builtin.command: >
+    oscap xccdf eval --profile {{ luks_oscap_profile }}
+    --results {{ luks_compliance_report_dir }}/oscap/results-{{ ansible_hostname }}.xml
+    --report {{ luks_compliance_report_dir }}/oscap/report-{{ ansible_hostname }}.html
+    /usr/share/xml/scap/ssg/content/ssg-rhel{{ ansible_distribution_major_version }}-ds.xml
+  register: oscap_result
+  changed_when: false
+  failed_when: false

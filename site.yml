@@ -1,16 +1,24 @@
 - name: RHEL9 SOE Configuration
-  hosts: servers
+  hosts: all
   become: true
+  collections:
+    - ansible.posix
+    - community.general
+    - community.crypto
+    - ansible.utils
+    - ansible.builtin
   roles:
-    - common
+    - luks_encryption
     - ad_join
-    - chrony
-    - yubikey
-    - librenms
-    - nessus
     - azure_backup
-    - veeam
-    - security
+    - chrony
+    - common
     - fapolicyd
-    - openscap
+    - librenms
     - logging
+    - login_banner
+    - defender_endpoint
+    - security
+    - system_update 
+    - veeam
+    - yubikey 

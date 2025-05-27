@@ -1,0 +1,37 @@
+---
+- name: Change default passphrase if present
+  ansible.builtin.command: >
+    cryptsetup luksChangeKey {{ luks_encrypted_device }}
+    --key-file={{ ansible_facts['ansible_user_dir'] }}/initial_passphrase
+    --new-key-file={{ ansible_facts['ansible_user_dir'] }}/new_passphrase_file
+  args:
+    removes: "{{ ansible_facts['ansible_user_dir'] }}/initial_passphrase"
+  when: ansible_facts['ansible_user_dir'] + "/initial_passphrase" is file
+  no_log: true
+
+- name: Add recovery key if only one slot
+  ansible.builtin.command: >
+    cryptsetup luksAddKey {{ luks_encrypted_device }}
+    --key-file={{ ansible_facts['ansible_user_dir'] }}/new_passphrase_file
+    {{ ansible_facts['ansible_user_dir'] }}/recovery_key_file
+  when:
+    - ansible_facts['ansible_user_dir'] + "/recovery_key_file" is file
+    - ansible_facts['ansible_user_dir'] + "/new_passphrase_file" is file
+
+- name: Configure /etc/crypttab
+  ansible.builtin.template:
+    src: crypttab.j2
+    dest: /etc/crypttab
+    owner: root
+    group: root
+    mode: '0644'
+  notify: rebuild initramfs
+
+- name: Add dracut config
+  ansible.builtin.copy:
+    content: 'add_dracutmodules+=" crypt "'
+    dest: /etc/dracut.conf.d/luks.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: rebuild initramfs
